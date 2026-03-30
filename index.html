@@ -22,57 +22,57 @@
             font-family: 'Indie Flower', cursive;
         }
 
-        /* --- CAMERA VIEW --- */
+        /* --- THE CAMERA SCENE --- */
         .scene {
             display: flex; justify-content: center; align-items: center;
             perspective: 2500px; width: 100%; height: 100%;
-            transform: scale(0.5); 
+            transform: scale(0.5); /* Centered view */
             transition: transform 1.5s cubic-bezier(0.645, 0.045, 0.355, 1);
         }
         .scene.zoomed { transform: scale(0.9); }
 
         /* --- THE BOOK CONTAINER --- */
         .book {
-            width: 800px; height: 550px;
+            width: 400px; height: 550px; /* Width of exactly one page */
             position: relative; transform-style: preserve-3d;
             transition: transform 1.5s cubic-bezier(0.645, 0.045, 0.355, 1);
+            /* Centering fix: reset any previous margins */
+            margin: 0; 
         }
         
-        /* Centering Logic */
-        .book.closed { transform: translateX(200px); }
-        .book.opened { transform: translateX(0); }
+        /* When opened, shift the 400px box 200px to the right. 
+           This keeps the 800px spread perfectly centered on screen. */
+        .book.opened { transform: translateX(200px); }
 
-        /* --- THE PAGES (BASE) --- */
+        /* --- THE PAGES --- */
         .page {
             width: 400px; height: 100%;
             background-color: var(--paper);
-            position: absolute; top: 0;
+            position: absolute; top: 0; left: 0;
             box-sizing: border-box; 
             box-shadow: inset 0 0 30px rgba(0,0,0,0.05);
             z-index: 1;
-            /* LEAK PROTECTION: Prevents text/scrollbars from spilling out */
-            overflow: hidden; 
-            opacity: 0;
+            overflow: hidden; /* STOP LEAKING */
+            opacity: 0; /* CONTENT PROTECTION */
             pointer-events: none;
             transition: opacity 0.3s ease;
-            transition-delay: 0.7s;
+            transition-delay: 0.7s; /* Delay so verse doesn't show through cover */
         }
         .book.opened .page { opacity: 1; pointer-events: auto; }
 
-        .page-left { left: 0; border-radius: 15px 0 0 15px; border-right: 1px solid #ddd; }
-        .page-right { left: 400px; border-radius: 0 15px 15px 0; border-left: 1px solid #ddd; }
+        .page-left { left: -400px; border-radius: 15px 0 0 15px; border-right: 1px solid #ddd; }
+        .page-right { left: 0; border-radius: 0 15px 15px 0; border-left: 1px solid #ddd; }
 
-        /* Internal content wrapper */
         .page-content {
             height: 100%; padding: 25px; display: flex; flex-direction: column;
             box-sizing: border-box;
         }
 
-        /* --- PHYSICAL FLIP ANIMATION --- */
+        /* --- PHYSICAL FLIPPER ELEMENT --- */
         .flipper {
             width: 400px; height: 100%;
             background-color: var(--paper);
-            position: absolute; left: 400px; top: 0;
+            position: absolute; left: 0; top: 0;
             transform-origin: left center;
             transform-style: preserve-3d;
             z-index: 5;
@@ -94,7 +94,7 @@
         /* --- THE COVER (THE HINGE) --- */
         .cover-wrapper {
             width: 400px; height: 100%;
-            position: absolute; left: 400px; top: 0;
+            position: absolute; left: 0; top: 0;
             transform-origin: left center;
             transform-style: preserve-3d;
             transition: transform 1.5s cubic-bezier(0.645, 0.045, 0.355, 1);
@@ -189,8 +189,8 @@
             right: { type: "profile", name: "Aishy", image: "Pictures/Aishy Pics/Aishy.1.jpg", loc: "Bay, Laguna", bday: "July 17, 2007", desc: "A very strong-willed woman na hindi nagpapatalo. Honestly, napaka-sweet nito ni Aishy—like, super sweet talaga. Kahit lagi niya akong napagti-tripan, tingin ko naman way niya yun ng paglambing. Napaka-strong niya, and honestly, I like the way she carries herself—very womanlike, kakaiba in a good way. Malakas lang talaga amats nito." }
         },
         {
-            left: { type: "memory", title: "Our Future", image: "Pictures/Desk Image1.jpg", text: "Endless adventures await us... 🌺" },
-            right: { type: "memory", title: "Forever", image: "Pictures/Desk Image1.jpg", text: "Every day with you is my favorite memory. 🌺" }
+            left: { type: "memory", title: "Spread 2 Left", image: "Pictures/Desk Image1.jpg", text: "New memory 🌺" },
+            right: { type: "memory", title: "Spread 2 Right", image: "Pictures/Desk Image1.jpg", text: "New memory 🌺" }
         }
     ];
 
@@ -200,7 +200,8 @@
     const flipper = document.getElementById('pageFlipper');
 
     function openBook() {
-        book.classList.replace('closed', 'opened');
+        book.classList.remove('closed');
+        book.classList.add('opened');
         scene.classList.add('zoomed');
         renderContent();
     }
@@ -237,7 +238,7 @@
         if (spread.left.type === "verse") {
             leftArea.innerHTML = `<div class="verse-text">${spread.left.text}</div><div style="text-align:center; color:var(--accent-pink); font-weight:bold; margin-top:5px;">${spread.left.ref}</div><p style="text-align:center; margin-top:30px; line-height:1.6;">${spread.left.msg}</p><div style="text-align:center; font-size:3rem; margin-top:20px;">🌺</div><p style="text-align:center; color:#ccc; font-size:0.7rem; margin-top:auto;">[ Tap page to close ]</p>`;
         } else {
-            leftArea.innerHTML = `<div style="text-align:center;"><div style="color:var(--accent-pink); font-weight:bold; font-size:1.1rem;">${spread.left.title}</div><div class="polaroid"><img src="${spread.left.image}"></div><p>${spread.left.text}</p></div>`;
+            leftArea.innerHTML = `<div style="text-align:center;"><div style="color:var(--accent-pink); font-weight:bold; font-size:1.1rem;">${spread.left.title}</div><div class="polaroid"><img src="${spread.left.image}"></div><p style="color:#444;">${spread.left.text}</p></div>`;
         }
 
         // Render Right
@@ -251,6 +252,8 @@
         document.getElementById('prevBtn').disabled = (currentIdx === 0);
         document.getElementById('nextBtn').disabled = (currentIdx === albumSpreads.length - 1);
     }
+
+    renderContent();
 </script>
 
 </body>
