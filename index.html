@@ -3,272 +3,254 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Our Digital Scrapbook</title>
+    <title>Our Digital Scrapbook 🌺</title>
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Indie+Flower&display=swap" rel="stylesheet">
     <style>
         :root {
-            --paper: #fffdf5; /* Off-white paper color */
+            --paper: #fffdf5; 
             --cover-pink: #ffb6c1; 
             --spine-black: #1a1a1a;  
             --accent-pink: #ff69b4;
-            --shadow: rgba(0, 0, 0, 0.2);
         }
 
         body {
             margin: 0; padding: 0;
             background-image: url('Pictures/Desk Image1.jpg'); 
-            background-size: cover;
-            background-position: center;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
+            background-size: cover; background-position: center;
+            height: 100vh; display: flex; justify-content: center; align-items: center;
+            overflow: hidden; background-color: #333;
             font-family: 'Indie Flower', cursive;
         }
 
-        /* --- THE CAMERA SCENE --- */
+        /* --- CAMERA VIEW --- */
         .scene {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            perspective: 2500px;
-            width: 100%; height: 100%;
-            transform: scale(0.65); /* Starting zoom */
+            display: flex; justify-content: center; align-items: center;
+            perspective: 2500px; width: 100%; height: 100%;
+            transform: scale(0.5); 
             transition: transform 1.5s cubic-bezier(0.645, 0.045, 0.355, 1);
         }
+        .scene.zoomed { transform: scale(0.9); }
 
-        .scene.zoomed { transform: scale(1.1); }
-
-        /* --- THE REALISTIC BOOK --- */
+        /* --- THE BOOK CONTAINER --- */
         .book {
-            width: 380px;
-            height: 520px;
-            position: relative;
-            transform-style: preserve-3d;
+            width: 800px; height: 550px;
+            position: relative; transform-style: preserve-3d;
             transition: transform 1.5s cubic-bezier(0.645, 0.045, 0.355, 1);
-            /* Realistic deep shadow on the desk */
-            box-shadow: 
-                5px 5px 20px rgba(0,0,0,0.2),
-                30px 30px 50px rgba(0,0,0,0.3);
         }
+        
+        /* Centering Logic */
+        .book.closed { transform: translateX(200px); }
+        .book.opened { transform: translateX(0); }
 
-        /* Added: Visual page thickness (the white stack on the side) */
-        .book::before {
-            content: '';
-            position: absolute;
-            top: 5px; right: -5px;
-            width: 10px; height: 510px;
-            background: #eee;
-            border-radius: 2px;
-            box-shadow: inset 2px 0 5px rgba(0,0,0,0.1);
+        /* --- THE PAGES (BASE) --- */
+        .page {
+            width: 400px; height: 100%;
+            background-color: var(--paper);
+            position: absolute; top: 0;
+            box-sizing: border-box; 
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.05);
             z-index: 1;
+            /* LEAK PROTECTION: Prevents text/scrollbars from spilling out */
+            overflow: hidden; 
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            transition-delay: 0.7s;
+        }
+        .book.opened .page { opacity: 1; pointer-events: auto; }
+
+        .page-left { left: 0; border-radius: 15px 0 0 15px; border-right: 1px solid #ddd; }
+        .page-right { left: 400px; border-radius: 0 15px 15px 0; border-left: 1px solid #ddd; }
+
+        /* Internal content wrapper */
+        .page-content {
+            height: 100%; padding: 25px; display: flex; flex-direction: column;
+            box-sizing: border-box;
         }
 
-        .book.opened { transform: translateX(190px); }
+        /* --- PHYSICAL FLIP ANIMATION --- */
+        .flipper {
+            width: 400px; height: 100%;
+            background-color: var(--paper);
+            position: absolute; left: 400px; top: 0;
+            transform-origin: left center;
+            transform-style: preserve-3d;
+            z-index: 5;
+            display: none; 
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.1);
+        }
+        .flip-anim-next { display: block; animation: flipNext 0.8s ease-in-out forwards; }
+        .flip-anim-back { display: block; animation: flipBack 0.8s ease-in-out forwards; }
 
-        /* --- THE COVER (Interactive Part) --- */
+        @keyframes flipNext {
+            0% { transform: rotateY(0deg); }
+            100% { transform: rotateY(-180deg); }
+        }
+        @keyframes flipBack {
+            0% { transform: rotateY(-180deg); }
+            100% { transform: rotateY(0deg); }
+        }
+
+        /* --- THE COVER (THE HINGE) --- */
         .cover-wrapper {
-            width: 100%; height: 100%;
-            position: absolute; z-index: 100; /* Higher Z-index to ensure it is clickable */
+            width: 400px; height: 100%;
+            position: absolute; left: 400px; top: 0;
             transform-origin: left center;
             transform-style: preserve-3d;
             transition: transform 1.5s cubic-bezier(0.645, 0.045, 0.355, 1);
-            cursor: pointer;
+            z-index: 10; cursor: pointer;
         }
+        .book.opened .cover-wrapper { transform: rotateY(-180deg); pointer-events: none; }
 
-        .book.opened .cover-wrapper { transform: rotateY(-180deg); }
-
-        /* Front: Realistic Pink Cover */
         .cover-front {
             width: 100%; height: 100%;
             background: linear-gradient(135deg, var(--cover-pink) 0%, #ffc0cb 100%);
             border-radius: 0 15px 15px 0;
-            position: absolute;
-            backface-visibility: hidden;
+            position: absolute; backface-visibility: hidden;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
             border-left: 20px solid var(--spine-black);
-            box-sizing: border-box;
+            box-shadow: 10px 10px 30px rgba(0,0,0,0.3);
         }
 
-        /* Added: Gold "foil" border on cover */
-        .cover-front::after {
-            content: '';
-            position: absolute;
-            top: 20px; left: 10px; right: 20px; bottom: 20px;
-            border: 1px solid rgba(255,255,255,0.3);
-            border-radius: 5px;
-            pointer-events: none;
+        /* --- STYLING ELEMENTS --- */
+        .verse-text { font-family: 'Dancing Script'; font-size: 1.8rem; color: #444; text-align: center; margin-top: 20px; line-height: 1.4; }
+        .polaroid {
+            background: white; padding: 8px 8px 30px 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            transform: rotate(-1deg); width: 85%; margin: 0 auto 10px; border: 1px solid #eee;
         }
-
-        /* Back: Left Page with Gutter Shadow */
-        .cover-back {
-            width: 100%; height: 100%;
-            background-color: var(--paper);
-            border-radius: 15px 0 0 15px;
-            position: absolute;
-            transform: rotateY(180deg); 
-            backface-visibility: hidden;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            padding: 40px; box-sizing: border-box;
-            /* Inner shadow for the book fold */
-            box-shadow: inset -20px 0 30px rgba(0,0,0,0.05);
-            text-align: center;
-        }
-
-        /* --- RIGHT PAGE (Memories) --- */
-        .right-page {
-            width: 100%; height: 100%;
-            background-color: var(--paper);
-            position: absolute; z-index: 5;
-            border-radius: 0 15px 15px 0;
-            padding: 30px; box-sizing: border-box;
-            display: flex; flex-direction: column; justify-content: space-between;
-            /* Inner shadow for the book fold */
-            box-shadow: inset 20px 0 30px rgba(0,0,0,0.05);
-        }
-
-        .verse-text { font-family: 'Dancing Script'; font-size: 1.8rem; color: #444; line-height: 1.4; }
-        .verse-ref { font-size: 1rem; color: var(--accent-pink); letter-spacing: 2px; font-weight: bold; margin-top: 15px; }
-
-        #page-content { text-align: center; }
-
-        .photo-frame {
-            background: white;
-            padding: 10px 10px 30px 10px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            margin: 10px auto;
-            border: 1px solid #f0f0f0;
-            width: 85%;
-            transform: rotate(1deg); /* Slight tilt for realism */
-        }
-
-        .photo-frame img { width: 100%; height: 200px; object-fit: cover; display: block; }
+        .polaroid img { width: 100%; height: 200px; object-fit: cover; display: block; }
         
+        /* DESCRIPTION SCROLL BOX (Leak Proof) */
+        .profile-desc { 
+            font-size: 0.9rem; line-height: 1.5; color: #444; 
+            background: rgba(255, 255, 255, 0.7); padding: 10px; border-radius: 8px;
+            text-align: justify;
+            height: 120px; /* Fixed height container */
+            overflow-y: auto; /* Internal scroll only */
+            scrollbar-width: thin;
+            scrollbar-color: var(--accent-pink) transparent;
+        }
+
+        /* NAV BUTTONS (Pinned to bottom) */
         .nav-controls {
+            margin-top: auto; padding-top: 10px; border-top: 1px solid #eee;
             display: flex; justify-content: space-between; align-items: center;
-            border-top: 1px solid #eee; padding-top: 10px;
+            background: var(--paper);
         }
-
-        .btn {
-            background: var(--spine-black); color: white;
-            border: none; padding: 6px 15px;
-            font-family: 'Indie Flower', cursive;
-            cursor: pointer; border-radius: 4px;
-            transition: 0.3s;
-        }
-        .btn:hover { background: var(--accent-pink); }
-        .btn:disabled { background: #eee; color: #ccc; cursor: not-allowed; }
-
-        @media (max-width: 800px) {
-            .scene { transform: scale(0.7) !important; }
-            .book.opened { transform: translateX(0); }
-        }
+        .btn { background: var(--spine-black); color: white; border: none; padding: 8px 15px; cursor: pointer; border-radius: 4px; font-family: 'Indie Flower'; }
+        .btn:disabled { opacity: 0.2; cursor: not-allowed; }
+        
+        .content-fade { transition: opacity 0.3s; opacity: 1; }
+        .content-hidden { opacity: 0; }
     </style>
 </head>
 <body>
 
 <div class="scene" id="scene">
-    <!-- Click this whole book to toggle -->
-    <div class="book" id="myBook">
+    <div class="book closed" id="myBook">
         
-        <div class="cover-wrapper" onclick="toggleBook()">
-            <!-- Front -->
-            <div class="cover-front">
-                <h1 style="font-family: 'Dancing Script'; font-size: 3.2rem; margin:0;">Our Story</h1>
-                <p style="margin: 5px 0; letter-spacing: 1px; opacity: 0.8;">TAP TO OPEN</p>
-                <div style="font-size: 2.5rem; margin-top: 10px;">🎀</div>
-            </div>
-
-            <!-- Inside Left Page -->
-            <div class="cover-back">
-                <div class="verse-text">"When the time is right, I, the Lord, will make it happen."</div>
-                <div class="verse-ref">ISAIAH 60:22</div>
-                <div style="font-size: 2rem; margin-top: 20px;">🌸</div>
-                <p style="font-size: 0.7rem; color: #bbb; margin-top: 40px;">(Tap to Close)</p>
-            </div>
+        <!-- LEFT PAGE -->
+        <div class="page page-left" onclick="closeBook()">
+            <div id="left-content" class="page-content content-fade"></div>
         </div>
 
         <!-- RIGHT PAGE -->
-        <div class="right-page">
-            <div id="page-content">
-                <!-- Content loaded by JS -->
-            </div>
-
-            <div class="nav-controls">
-                <button class="btn" id="prevBtn" onclick="prevPage(event)">← Back</button>
-                <span style="font-size: 0.8rem; color:#ccc;" id="pageNum"></span>
-                <button class="btn" id="nextBtn" onclick="nextPage(event)">Next →</button>
+        <div class="page page-right">
+            <div id="right-content" class="page-content content-fade">
+                <div id="right-dynamic-area" style="flex-grow: 1; display: flex; flex-direction: column; overflow: hidden;"></div>
+                <div class="nav-controls">
+                    <button class="btn" id="prevBtn" onclick="turnPage(-1, event)">🌺 Back</button>
+                    <span id="pageNum" style="color: #bbb; font-size: 0.8rem;"></span>
+                    <button class="btn" id="nextBtn" onclick="turnPage(1, event)">Next 🌺</button>
+                </div>
             </div>
         </div>
+
+        <!-- THE PHYSICAL FLIPPER -->
+        <div class="flipper" id="pageFlipper"></div>
+
+        <!-- THE COVER -->
+        <div class="cover-wrapper" onclick="openBook()">
+            <div class="cover-front">
+                <h1 style="font-family: 'Dancing Script'; font-size: 3.5rem; margin:0;">Our Story</h1>
+                <p style="letter-spacing: 2px; opacity: 0.7;">TAP TO OPEN</p>
+                <div style="font-size: 3rem; margin-top: 15px;">🌺</div>
+            </div>
+        </div>
+
     </div>
 </div>
 
 <script>
-    const myMemories = [
+    const albumSpreads = [
         {
-            date: "The Beginning",
-            image: "Pictures/Desk Image1.jpg", 
-            text: "This is the first page of our digital scrapbook. I'm so excited to fill this with you."
+            left: { type: "verse", text: '"When the time is right, I, the Lord, will make it happen."', ref: "ISAIAH 60:22", msg: "Hi Aishy, I made this for you.<br>Welcome to our story! 🌺" },
+            right: { type: "profile", name: "Aishy", image: "Pictures/Aishy Pics/Aishy.1.jpg", loc: "Bay, Laguna", bday: "July 17, 2007", desc: "A very strong-willed woman na hindi nagpapatalo. Honestly, napaka-sweet nito ni Aishy—like, super sweet talaga. Kahit lagi niya akong napagti-tripan, tingin ko naman way niya yun ng paglambing. Napaka-strong niya, and honestly, I like the way she carries herself—very womanlike, kakaiba in a good way. Malakas lang talaga amats nito." }
         },
         {
-            date: "A Little Note",
-            image: "Pictures/Desk Image1.jpg", 
-            text: "Every memory here is a treasure I want to keep forever."
+            left: { type: "memory", title: "Our Future", image: "Pictures/Desk Image1.jpg", text: "Endless adventures await us... 🌺" },
+            right: { type: "memory", title: "Forever", image: "Pictures/Desk Image1.jpg", text: "Every day with you is my favorite memory. 🌺" }
         }
     ];
 
-    let currentIndex = 0;
+    let currentIdx = 0;
     const book = document.getElementById('myBook');
     const scene = document.getElementById('scene');
+    const flipper = document.getElementById('pageFlipper');
 
-    // FIXED: Reliable toggle function
-    function toggleBook() {
-        if (book.classList.contains('opened')) {
-            book.classList.remove('opened');
-            scene.classList.remove('zoomed');
+    function openBook() {
+        book.classList.replace('closed', 'opened');
+        scene.classList.add('zoomed');
+        renderContent();
+    }
+
+    function closeBook() {
+        book.classList.replace('opened', 'closed');
+        scene.classList.remove('zoomed');
+    }
+
+    function turnPage(dir, event) {
+        event.stopPropagation();
+        flipper.className = 'flipper ' + (dir > 0 ? 'flip-anim-next' : 'flip-anim-back');
+        document.getElementById('left-content').classList.add('content-hidden');
+        document.getElementById('right-content').classList.add('content-hidden');
+
+        setTimeout(() => {
+            currentIdx += dir;
+            renderContent();
+        }, 400);
+
+        setTimeout(() => {
+            document.getElementById('left-content').classList.remove('content-hidden');
+            document.getElementById('right-content').classList.remove('content-hidden');
+            flipper.className = 'flipper';
+        }, 800);
+    }
+
+    function renderContent() {
+        const spread = albumSpreads[currentIdx];
+        const leftArea = document.getElementById('left-content');
+        const rightArea = document.getElementById('right-dynamic-area');
+
+        // Render Left
+        if (spread.left.type === "verse") {
+            leftArea.innerHTML = `<div class="verse-text">${spread.left.text}</div><div style="text-align:center; color:var(--accent-pink); font-weight:bold; margin-top:5px;">${spread.left.ref}</div><p style="text-align:center; margin-top:30px; line-height:1.6;">${spread.left.msg}</p><div style="text-align:center; font-size:3rem; margin-top:20px;">🌺</div><p style="text-align:center; color:#ccc; font-size:0.7rem; margin-top:auto;">[ Tap page to close ]</p>`;
         } else {
-            book.classList.add('opened');
-            scene.classList.add('zoomed');
-            updatePage();
+            leftArea.innerHTML = `<div style="text-align:center;"><div style="color:var(--accent-pink); font-weight:bold; font-size:1.1rem;">${spread.left.title}</div><div class="polaroid"><img src="${spread.left.image}"></div><p>${spread.left.text}</p></div>`;
         }
-    }
 
-    function updatePage() {
-        const memory = myMemories[currentIndex];
-        const content = document.getElementById('page-content');
-        
-        content.innerHTML = `
-            <div style="color:var(--accent-pink); font-weight:bold; font-size:1.1rem; margin-bottom:5px;">${memory.date}</div>
-            <div class="photo-frame">
-                <img src="${memory.image}" alt="Memory">
-            </div>
-            <div style="font-size:1.2rem; line-height:1.4; color:#444; margin-top:10px;">${memory.text}</div>
-        `;
-
-        document.getElementById('pageNum').innerText = `Pg ${currentIndex + 1} / ${myMemories.length}`;
-        document.getElementById('prevBtn').disabled = (currentIndex === 0);
-        document.getElementById('nextBtn').disabled = (currentIndex === myMemories.length - 1);
-    }
-
-    function nextPage(e) {
-        e.stopPropagation(); // Stops the click from reaching the cover and closing the book
-        if (currentIndex < myMemories.length - 1) {
-            currentIndex++;
-            updatePage();
+        // Render Right
+        if (spread.right.type === "profile") {
+            rightArea.innerHTML = `<div class="polaroid"><img src="${spread.right.image}"></div><h2 style="font-family:'Dancing Script'; font-size:2.3rem; color:var(--accent-pink); margin:0; text-align:center;">${spread.right.name} 🌺</h2><div style="text-align:center; margin:5px 0;"><span style="background:#f0f0f0; padding:4px 10px; border-radius:20px; font-size:0.75rem;">📍 ${spread.right.loc}</span><span style="background:#f0f0f0; padding:4px 10px; border-radius:20px; font-size:0.75rem;">🎂 ${spread.right.bday}</span></div><div class="profile-desc">${spread.right.desc}</div>`;
+        } else {
+            rightArea.innerHTML = `<div style="text-align:center;"><div style="color:var(--accent-pink); font-weight:bold; font-size:1.1rem;">${spread.right.title}</div><div class="polaroid"><img src="${spread.right.image}"></div><p style="color:#444; padding-top:10px;">${spread.right.text}</p></div>`;
         }
-    }
 
-    function prevPage(e) {
-        e.stopPropagation(); // Stops the click from reaching the cover and closing the book
-        if (currentIndex > 0) {
-            currentIndex--;
-            updatePage();
-        }
+        document.getElementById('pageNum').innerText = `Spread ${currentIdx + 1} / ${albumSpreads.length}`;
+        document.getElementById('prevBtn').disabled = (currentIdx === 0);
+        document.getElementById('nextBtn').disabled = (currentIdx === albumSpreads.length - 1);
     }
-
-    // Initial run
-    updatePage();
 </script>
 
 </body>
